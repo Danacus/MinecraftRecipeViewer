@@ -1,13 +1,12 @@
-import Item from './item'
+import Item from './Item'
+import { ItemList } from './Lists'
 
 export default class Recipe {
-  constructor(recipeRaw, categoryInfo, id) {
-    this.input = recipeRaw.input.items.map(item => new Item(item))
-    this.input = this.input.concat(recipeRaw.input.fluids.map(fluid => new Item(fluid)))
-    this.output = recipeRaw.output.items.map(item => new Item(item))
-    this.output = this.output.concat(recipeRaw.output.fluids.map(fluid => new Item(fluid)))
-    this.category = categoryInfo.title
-    this.catalysts = categoryInfo.catalysts
+  constructor(recipeRaw, title, catalysts, id) {
+    this.input = new ItemList().setItems(recipeRaw.input.items.concat(recipeRaw.input.fluids))
+    this.output = new ItemList().setItems(recipeRaw.output.items.concat(recipeRaw.output.fluids))
+    this.category = title
+    this.catalysts = catalysts
     this.id = id
   }
 

@@ -1,4 +1,4 @@
-import Node from './classes/node'
+import Node from './classes/Node'
 import vis from 'vis'
 import { log } from 'util';
 import { updateBlacklist } from './actions/actions'
@@ -159,32 +159,6 @@ Array.prototype.getNodesWithStackOredict = function(stack) {
   })
 }
 
-Array.prototype.getRecipesWithOutputName = function(name) {
-  return this.filter(recipe => recipe.output.hasItemWithName(name))
-}
 
-Array.prototype.getRecipesWithOutputOredict = function(name) {
-  return this.filter(recipe => recipe.output.hasItemWithOredict(name))
-}
 
-Array.prototype.hasItemWithName = function(name) {
-  let result = false
-  this.forEach(item => {
-    item.stacks.forEach(stack => {
-      if (stack.name == name) result = true
-    })
-  })
-  return result
-}
 
-Array.prototype.hasItemWithOredict = function(name) {
-  let result = false
-  this.forEach(item => {
-    item.stacks.forEach(stack => {
-      stack.oreDict.forEach(oreDict => {
-        if (oreDict == name) result = true
-      })
-    })
-  })
-  return result
-}

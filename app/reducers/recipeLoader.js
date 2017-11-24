@@ -1,6 +1,6 @@
-import {fromJS} from 'immutable'
+import { fromJS } from 'immutable'
 import { STATUS } from '../utils/Constants'
-import Recipe from '../classes/recipe'
+import { RecipeList } from '../classes/Lists'
 
 let currentId = 0
 
@@ -22,26 +22,14 @@ export default function recipeLoader(state = {}, action) {
   }
 }
 
-const addRecipeFile = (state, obj) => {
-  let newState = state
-  obj.recipes.forEach(recipe => {
-    newState = newState.updateIn(['recipes'], recipes => recipes.push(
-      new Recipe(recipe, obj, currentId)
-    ))
+const addRecipeFile = (state, obj) => 
+  state.updateIn(['recipes'], recipes => recipes.concat(new RecipeList().setRecipes(obj)))
 
-    currentId++
-  })
-
-  return newState
-}
-  //state.updateIn(['recipes'], recipes => recipes.push(obj))
-
-const addMap = (state, obj, name) => {
-  return state.setIn([name], fromJS(obj))
-}
+const addMap = (state, obj, name) => 
+  state.setIn([name], fromJS(obj))
 
 const clearRecipeFiles = state =>
-  state.setIn(['recipes'], fromJS([]))
+  state.setIn(['recipes'], new RecipeList())
 
 const setStatus = (state, status) =>
   state.setIn(['status'], status)

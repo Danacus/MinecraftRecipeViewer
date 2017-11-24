@@ -3,25 +3,23 @@ import { render } from 'react-dom'
 import { AppContainer } from 'react-hot-loader'
 import Root from './containers/Root'
 import { configureStore, history } from './store/configureStore'
-import {fromJS} from 'immutable'
+import { fromJS, List, Map } from 'immutable'
+import Immutable from 'immutable'
 import './app.global.css'
 import { STATUS } from './utils/Constants'
+import { RecipeList } from './classes/Lists'
+import { readRecipeFiles, clearRecipeFiles, setStatus, readMap } from './actions/actions'
+import Tree from './tree2'
 
-const store = configureStore({
-  recipeLoader: fromJS({
-    recipes: [
-
-    ],
-    lookupMap: [
-
-    ],
-    tooltipMap: [
-
-    ],
+export const store = configureStore({
+  recipeLoader: new Immutable.Map({
+    recipes: new RecipeList(),
+    lookupMap: new List(),
+    tooltipMap: new List(),
     settings: {
       path: `/home/daan/Documents/Development/JEIExporter/run/config/jeiexporter`,
       blacklist: {
-        items: [
+        items: new List([
           /tool/,
           /armor/,
           /axe/,
@@ -47,7 +45,7 @@ const store = configureStore({
           /lever/,
           /note/,
           /thermal/
-        ]
+        ])
       }
     },
     status: STATUS.IDLE
@@ -55,6 +53,22 @@ const store = configureStore({
   router: {
 
   }
+})
+
+store.dispatch(clearRecipeFiles())
+store.dispatch(setStatus(STATUS.LOADING('Loading recipes ...')))
+store.dispatch(readRecipeFiles("/home/daan/Documents/Development/JEIExporter/run/config/jeiexporter/exports/recipes/")).then(() => {
+  store.dispatch(setStatus(STATUS.LOADING('Loading maps ...')))
+
+  let promises = [
+    store.dispatch(readMap("/home/daan/Documents/Development/JEIExporter/run/config/jeiexporter/exports/lookupMap.json", "lookupMap")),
+    store.dispatch(readMap("/home/daan/Documents/Development/JEIExporter/run/config/jeiexporter/exports/tooltipMap.json", "tooltipMap"))
+  ]
+
+  Promise.all(promises).then(() => {
+    store.dispatch(setStatus(STATUS.IDLE))
+    let tree = new Tree("actuallyadditions:block_grinder_double:0")
+  })
 })
 
 render(
