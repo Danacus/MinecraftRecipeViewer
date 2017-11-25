@@ -121,23 +121,6 @@ Array.prototype.getNodeById = function(id) {
   return this.find(node => node.node.id == id)
 }
 
-
-Array.prototype.removeInputDuplicates = function() {
-  let newArr = []
-  let stackArr = []
-
-  this.forEach(item => {
-    item.stacks.forEach(stack => {
-      if (!newArr.includes(item) && !stackArr.includes(stack.name)) {
-        newArr.push(item)
-        stackArr.push(stack.name)
-      }
-    })
-  })
-
-  return newArr
-}
-
 Array.prototype.getNodesWithRecipe = function(recipe) {
   return this.filter(node => node.recipe == recipe)
 }

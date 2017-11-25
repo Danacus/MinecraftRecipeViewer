@@ -16,7 +16,7 @@ export default function recipeLoader(state = {}, action) {
     case 'SET_STATUS':
       return setStatus(state, action.status)
     case 'UPDATE_BLACKLIST':
-      return updateBlacklist(state, action.blacklist)
+      return updateBlacklist(state, action.id, action.blacklist)
     default:
       return state
   }
@@ -34,5 +34,6 @@ const clearRecipeFiles = state =>
 const setStatus = (state, status) =>
   state.setIn(['status'], status)
 
-const updateBlacklist = (state, blacklist) =>
-  state.setIn(['settings', 'blacklist'], fromJS(blacklist))
+const updateBlacklist = (state, id, blacklist) => 
+  state.setIn(['settings', 'blacklist'], blacklist)
+

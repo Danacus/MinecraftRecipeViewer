@@ -22,4 +22,12 @@ export default class Item {
 
     return result
   }
+
+  isBlacklisted(blacklist) {
+    return blacklist.get('items').some(item => {
+      item = new RegExp(item, "i")
+      return ((this.stacks.some(stack => stack.name.match(item))
+      || (this.stacks.some(stack => stack.oreDict.some(oreDict => oreDict.match(item))))))
+    })
+  }
 }

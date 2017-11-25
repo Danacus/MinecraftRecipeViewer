@@ -1,54 +1,46 @@
+import { List } from "immutable";
+import Item from "./Item";
+
 export default class Node {
-  /*fromRecipe(recipe, id, group, path) {
+  constructor(stack, id, group, path) {
     this.node = {
-      id: id,
-      group: group,
-      image: `${path}/items/${recipe.output[0].stacks[0].name.replace(/:(.*):/, '_$1_')}.png`
+      id,
+      group,
+      image: `${path}/items/${stack.name.replace(/:(.*):/, '_$1_')}.png`
     }
 
-    this.links = []
-    this.recipe = recipe
-
-    return this
-  }*/
-
-  fromStack(item, id, group, path) {
-    this.node = {
-      id: id,
-      group: group,
-      image: `${path}/items/${item.name.replace(/:(.*):/, '_$1_')}.png`
-    }
-
-    this.links = []
-    this.stack = item
+    this.parents = new List()
+    this.stack = stack
     this.dead = false
 
     return this
   }
 
-  kill() {
-    console.log("Kill!")
+  kill(recipes) {
     this.dead = true
   }
   
-
   link(node) {
-    if (this.links.includes(node)) return
-    this.links.push(node)
+    if (this.parents.includes(node)) return
+    this.parents = this.parents.push(node)
     return ({from: this.node.id, to: node.node.id})
   }
 
   getParents() {
-    return this.links
+    return this.parents
   }
 
   getChildren(nodes) {
     return nodes.filter(node => node.getParents().includes(this))
   }
 
-  isUseful(target, nodes, previousNodes = []) {
+  isBlacklisted(blacklist) {
+    return new Item({stacks: [this.stack]}).isBlacklisted(blacklist)
+  }
+
+  isUseful(target, nodes, previousNodes = new NodeList()) {
     let result = false
-    previousNodes.push(this)
+    previousNodes = previousNodes.push(this)
 
     if (this.stack.name == target) return true
 

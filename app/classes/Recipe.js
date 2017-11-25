@@ -11,17 +11,14 @@ export default class Recipe {
   }
 
   getParentRecipes(allRecipes) {
-    let recipes = []
-
-    allRecipes.forEach(recipe => {
+    return allRecipes.filter(recipe => {
+      let result = false
       recipe.output.forEach(output => {
         this.input.forEach(input => {
-          if (input.matches(output) && !recipes.includes(recipe))
-            recipes.push(recipe)
+          result = (input.matches(output) && !recipes.includes(recipe))
         })
       })
+      return result
     })
-
-    return recipes
   }
 }

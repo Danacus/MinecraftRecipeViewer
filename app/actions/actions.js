@@ -33,7 +33,25 @@ export const setStatus = status => ({
   status
 })
 
-export const updateBlacklist = blacklist => ({
+export const updateBlacklist = (blacklist, id) => ({
   type: 'UPDATE_BLACKLIST',
-  blacklist
+  blacklist,
+  id
+})
+
+export const networkCreate = (target, id) => ({
+  type: 'NETWORK_CREATE',
+  target,
+  id
+})
+
+export const networkRegenerate = id => ({
+  type: 'NETWORK_REGENERATE',
+  id
+})
+
+export const networkRemoveNode = (id, nodeId) => ({
+  type: 'NETWORK_REMOVE_NODE',
+  id,
+  nodeId
 })
