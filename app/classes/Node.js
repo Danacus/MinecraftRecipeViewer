@@ -2,27 +2,31 @@ import { List } from "immutable";
 import Item from "./Item";
 
 export default class Node {
-  constructor(stack, id, group, path) {
+  constructor(stack, id, group, recipes, path) {
     this.node = {
       id,
       group,
-      image: `${path}/items/${stack.name.replace(/:(.*):/, '_$1_')}.png`
+      image: `${path}/items/${stack.name.replace(/:/g, "_")/*.replace(/:(.*):/, '_$1_')*/}.png`
     }
 
     this.parents = new List()
     this.stack = stack
-    this.dead = false
-
+    this.recipes = recipes.getRecipesWithOutputName(stack.name)
+    this.uses = recipes.getRecipesWithInputName(stack.name)
+    this.activation = 1
+    this.distance
     return this
   }
 
-  kill(recipes) {
-    this.dead = true
+  activate(factor) {
+    this.activation *= factor
+    return this.activation
   }
   
   link(node) {
     if (this.parents.includes(node)) return
     this.parents = this.parents.push(node)
+    if (!node.distance || this.distance < node.distance) node.distance = this.distance + 1
     return ({from: this.node.id, to: node.node.id})
   }
 
@@ -34,25 +38,31 @@ export default class Node {
     return nodes.filter(node => node.getParents().includes(this))
   }
 
+  hasChild(nodes, node) {
+    return this.getChildren(nodes).some(child => child.stack.name == node.stack.name)
+  }
+
+  hasParent(node) {
+    return this.getParents().some(parent => parent.stack.name == node.stack.name)
+  }
+
   isBlacklisted(blacklist) {
     return new Item({stacks: [this.stack]}).isBlacklisted(blacklist)
   }
 
-  isUseful(target, nodes, previousNodes = new NodeList()) {
-    let result = false
-    previousNodes = previousNodes.push(this)
+  hasRecipe() {
+    return this.getRecipes().size > 0
+  }
 
-    if (this.stack.name == target) return true
+  getRecipes() {
+    return this.recipes
+  }
 
-    this.getChildren(nodes).forEach(child => {
-      if (child.stack.name == target) result = true
-      else if (!previousNodes.includes(child)) {
-        if (child.isUseful(target, nodes, previousNodes)) {
-          result = true
-        }
-      } 
-    })
+  getUses() {
+    return this.uses
+  }
 
-    return result
+  equals(node) {
+    return node.stack == this.stack
   }
 }

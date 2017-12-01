@@ -3,21 +3,15 @@ import { combineReducers } from 'redux'
 import { routerReducer as router } from 'react-router-redux'
 import recipeLoader from './recipeLoader'
 import networkReducer from './networkReducer'
-import { persistCombineReducers } from 'redux-persist'
-import storage from 'redux-persist/lib/storage'
-import immutableTransform from 'redux-persist-transform-immutable'
+import pluginLoader from './pluginLoader'
+import crafttweakerReducer from './crafttweakerReducer'
 
-const config = {
-  key: 'root2',
-  storage,
-  transforms: [immutableTransform()],
-  debug: true
-}
-
-const rootReducer = persistCombineReducers(config, {
+const rootReducer = combineReducers({
   recipeLoader,
   router,
-  networkReducer
+  networkReducer,
+  pluginLoader,
+  crafttweakerReducer
 })
 
-export default rootReducer;
+export default rootReducer

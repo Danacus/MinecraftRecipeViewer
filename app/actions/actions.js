@@ -55,3 +55,28 @@ export const networkRemoveNode = (id, nodeId) => ({
   id,
   nodeId
 })
+
+export const loadPlugins = plugins => ({
+  type: 'LOAD_PLUGINS',
+  plugins
+})
+
+export const mergeTranspiler = transpiler => ({
+  type: 'MERGE_TRANSPILER',
+  transpiler
+})
+
+export const mergeCTContext = context => ({
+  type: 'MERGE_CT_CONTEXT',
+  context
+})
+
+export const preLoad = plugins => dispatch => {
+  console.log(plugins)
+  plugins.forEach(plugin => {
+    console.log(plugin)
+    console.log(plugin.zsTranspiler)
+    dispatch(mergeTranspiler(plugin.getTranspiler()))
+    dispatch(mergeCTContext(plugin.getContext()))
+  })
+}

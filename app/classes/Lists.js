@@ -12,7 +12,13 @@ export class RecipeList extends List {
   }
 
   getRecipesWithOutputName(name) {
-    return this.filter(recipe => recipe.output.hasItemWithName(name))
+    //console.log(`${this.size} --> ${this.filter(recipe => recipe.output.hasItemWithName(name)).size}`)
+    return this.filter(recipe => recipe.output.hasItemWithName(name) /*&& !recipe.input.hasItemWithName(name)*/)
+  }
+
+  getRecipesWithInputName(name) {
+    //console.log(`${this.size} --> ${this.filter(recipe => recipe.output.hasItemWithName(name)).size}`)
+    return this.filter(recipe => recipe.input.hasItemWithName(name))
   }
       
   getRecipesWithOutputOredict(name) {
@@ -40,6 +46,7 @@ export class ItemList extends List {
   }
 
   removeBlacklisted(blacklist) {
+    //console.log(`${this.size} --> ${this.filter(item => !item.isBlacklisted(blacklist)).size}`)
     return this.filter(item => !item.isBlacklisted(blacklist))
   }
 
@@ -56,6 +63,8 @@ export class ItemList extends List {
       })
     })
   
+    //console.log(`${this.size} --> ${newArr.size}`)
+
     return newArr
   }
 }
@@ -66,18 +75,18 @@ export class NodeList extends List {
   }
   
   getNodesWithRecipe(recipe) {
-    return this.filter(node => node.recipe == recipe)
+    return this.filter(node => node.getRecipes().some(recipe2 => recipe2.id == recipe.id))
   }
   
-  getNodesWithStack(stack) {
-    return this.filter(node => node.stack.name == stack.name)
-  }
-  
-  getNodesWithStackOredict(stack) {
+  getNodesWithStack(stack, oreDict = false) {
     return this.filter(node => 
-      node.stack.oreDict.some(oredict => stack.oreDict.includes(oredict)) || node.stack.name == stack.name
+      oreDict ? 
+      node.stack.oreDict.some(oredict => stack.oreDict.includes(oredict)) 
+      || node.stack.name == stack.name :
+      node.stack.name == stack.name
     )
   }
+
   
   getBlacklisted(blacklist) {
     return this.filter(node => node.isBlacklisted(blacklist))

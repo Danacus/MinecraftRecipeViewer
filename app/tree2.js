@@ -5,6 +5,7 @@ import Node from './classes/Node'
 import vis from 'vis'
 import { updateBlacklist, networkRemoveNode } from './actions/actions'
 import { randomColor } from 'randomcolor'
+import { noCraftToRevert, noIsolatedGroups, noBlacklisted, noLoops, shortest2, activationKiller } from './utils/NodeKillers';
 
 export default class Network {
   constructor(target, id, networkSettings = fromJS({})) {
@@ -16,6 +17,14 @@ export default class Network {
     let state = (() => store.getState())()
     this.recipes = state.recipeLoader.get('recipes')
     this.settings = state.recipeLoader.get('settings').merge(networkSettings)
+    this.killers = new List([
+      {f: noBlacklisted, args: [this.settings.get('blacklist')]},
+      //{f: noCraftToRevert, args: []},
+      //{f: activationKiller, args: [5]},
+      //{f: noLoops, args: []},
+      {f: noIsolatedGroups, args: []},
+      //{f: shortest2, args: []},
+    ])
   }
 
   serialize() {
@@ -32,22 +41,11 @@ export default class Network {
     this.nodes = new NodeList()
 
     this.createNode({name: this.target, oreDict: []}, 0)
-
-    let removeNodes = []
-    
     this.nodes.forEach(node => {
-      if (node.stack.name != name) {
-        if (node.getParents().get(0) && node.getChildren(this.nodes).get(0))
-          if (node.getParents().get(0).stack.name == node.getChildren(this.nodes).get(0).stack.name) node.kill()
-      }
-      this.nodes = this.nodes.filter(node => !node.dead)
-    })  
-    
-    this.nodes.forEach(node => {
-      if (!node.isUseful(this.target, this.nodes, new NodeList())) node.kill() 
+      node.activate(50 * ((node.getUses().size * 0.1) / (node.distance * 2)) * (noCraftToRevert(node, this.nodes, this.target) ? 1 : 0))
+      //node.node.label = node.activation.toString()
     })
-
-    this.nodes = this.nodes.filter(node => !node.dead)
+    this.killNodes(node => {})
     this.visReload()
 
     return state.setIn(['networks', this.id], this.serialize())
@@ -61,39 +59,42 @@ export default class Network {
     let network = new vis.Network(container, {nodes: this.visNodes, edges: this.visEdges}, this.settings.get('visOptions'))
     
     network.on("doubleClick", params => {
-      this.onDoubleClick(params.nodes[0])
+      if (params.nodes[0])
+        this.onNodeDoubleClick(params.nodes[0])
     })
   }
 
-  onDoubleClick(id) {
+  onNodeDoubleClick(id) {
     let node = this.nodes.getNodeById(id)
     store.dispatch(updateBlacklist(
       this.settings.get('blacklist').updateIn(['items'], items => items.push(new RegExp(node.stack.name, "i")))
     , this.id))
   }
 
+  onEdgeDoubleClick(from, to) {
+
+  }
+
+  killNodes(onKill, killers = this.killers) {
+    killers.forEach(obj => {
+      this.nodes = this.nodes.filter(node => {
+        let result = obj.f(node, this.nodes, this.target, ...obj.args)
+        if (!result) onKill(node)
+        return result
+      })
+    })
+  }
+
   updateBlacklist(state, blacklist) {
     console.log(blacklist)
     let added = blacklist.get('items').filter(item => !this.settings.get('blacklist').get('items').includes(item))
     let removed = this.settings.get('blacklist').get('items').filter(item => !blacklist.get('items').includes(item))
+    this.killNodes(node => this.removeNode(node.node.id), new List([
+      {f: noBlacklisted, args: [blacklist]},
+      {f: noCraftToRevert, args: []},
+      {f: noIsolatedGroups, args: []}
+    ]))
 
-    added.forEach(add => {
-      this.nodes.getBlacklisted(blacklist).forEach(node => {
-        node.kill()
-        this.removeNode(node.node.id)
-      })
-    })
-
-    this.nodes = this.nodes.filter(node => !node.dead)
-
-    this.nodes.forEach(node => {
-      if (!node.isUseful(this.target, this.nodes, new NodeList())) {
-        node.kill() 
-        this.removeNode(node.node.id)
-      }
-    })
-
-    this.nodes = this.nodes.filter(node => !node.dead)
     return state = state.setIn(['networks', this.id], this.serialize())
   }
 
@@ -102,19 +103,23 @@ export default class Network {
   }
 
   createNode(stack, group, parentNode) {
-    let node = new Node(stack, this.nodes.size, group, this.settings.get('path'))
+    let node = new Node(stack, this.nodes.size, group, this.recipes, this.settings.get('path'))
+    if (node.stack.name == this.target) node.activation = 10
     this.nodes = this.nodes.push(node)
     let link
     if (parentNode) link = parentNode.link(node, this.colors.get(group))
+    else node.distance = 1
     if (link) this.edges = this.edges.push(link)
-    
+  
     this.recipes.getRecipesWithOutputName(stack.name).forEach(recipe => {
       recipe.input.noDuplicates().removeBlacklisted(this.settings.get('blacklist')).forEach(input => {
         input.stacks.forEach(stack => {
-          if (this.nodes.getNodesWithStackOredict(stack).filter(node => !this.recipes.some(recipe => recipe.output.some(stack => stack.name == this.target))).size > 0) {
-            this.nodes.getNodesWithStackOredict(stack).forEach(parentNode => {
-              let link = node.link(parentNode)
-              if (link) this.edges = this.edges.push(link)
+          if (this.nodes.getNodesWithStack(stack, true).filter(node => !this.recipes.some(recipe => recipe.output.some(stack => stack.name == this.target))).size > 0) {
+            this.nodes.getNodesWithStack(stack, true).forEach(parentNode => {
+              if (node.stack.name != parentNode.stack.name) {
+                let link = node.link(parentNode)
+                if (link) this.edges = this.edges.push(link)
+              }      
             })
           } else {
             this.createNode(stack, recipe.id, node)

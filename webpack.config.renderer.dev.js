@@ -250,9 +250,9 @@ export default merge.smart(baseConfig, {
     compress: true,
     noInfo: true,
     stats: 'errors-only',
-    inline: false,
+    inline: true,
     lazy: false,
-    hot: false,
+    hot: true,
     headers: { 'Access-Control-Allow-Origin': '*' },
     contentBase: path.join(__dirname, 'dist'),
     watchOptions: {

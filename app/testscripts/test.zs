@@ -1,0 +1,2 @@
+recipes.remove(<actuallyadditions:blockInputter>);
+recipes.addShaped(<actuallyadditions:blockInputter>, [[<ore:plankWood>, <ore:plankWood>, <ore:plankWood>], [<actuallyadditions:blockMisc:4>, <minecraft:hopper>, <actuallyadditions:blockMisc:4>], [<ore:plankWood>, <ore:plankWood>, <ore:plankWood>]]);
